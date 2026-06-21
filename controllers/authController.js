@@ -13,31 +13,54 @@ const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Name, email, and password are all required.' });
-  }
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+    return res.status(400).json({
+      message: 'Name, email, and password are all required.',
+    });
   }
 
-  const existing = await User.findOne({ email: email.toLowerCase() });
+  if (password.length < 6) {
+    return res.status(400).json({
+      message: 'Password must be at least 6 characters.',
+    });
+  }
+
+  const normalizedEmail = email.toLowerCase();
+
+  const existing = await User.findOne({ email: normalizedEmail });
   if (existing) {
-    return res.status(409).json({ message: 'An account with that email already exists.' });
+    return res.status(409).json({
+      message: 'An account with that email already exists.',
+    });
   }
 
   try {
-    const user = await User.create({ name, email, password });
+    const user = await User.create({
+      name,
+      email: normalizedEmail,
+      password,
+    });
+
     const token = signToken(user._id);
-    return res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+
+    return res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (err) {
-    // Handles the rare race where two register requests for the same email
-    // both pass the findOne check above before either create() finishes -
-    // MongoDB's unique index on email is the final safety net, and we
-    // translate its raw duplicate-key error (code 11000) into the same
-    // friendly message instead of letting it fall through as a generic 500.
     if (err.code === 11000) {
-      return res.status(409).json({ message: 'An account with that email already exists.' });
+      return res.status(409).json({
+        message: 'An account with that email already exists.',
+      });
     }
-    throw err;
+
+    console.error(err);
+    return res.status(500).json({
+      message: 'Server error during registration',
+    });
   }
 });
 
