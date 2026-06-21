@@ -24,10 +24,21 @@ const register = asyncHandler(async (req, res) => {
     return res.status(409).json({ message: 'An account with that email already exists.' });
   }
 
-  const user = await User.create({ name, email, password });
-  const token = signToken(user._id);
-
-  res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+  try {
+    const user = await User.create({ name, email, password });
+    const token = signToken(user._id);
+    return res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    // Handles the rare race where two register requests for the same email
+    // both pass the findOne check above before either create() finishes -
+    // MongoDB's unique index on email is the final safety net, and we
+    // translate its raw duplicate-key error (code 11000) into the same
+    // friendly message instead of letting it fall through as a generic 500.
+    if (err.code === 11000) {
+      return res.status(409).json({ message: 'An account with that email already exists.' });
+    }
+    throw err;
+  }
 });
 
 // POST /api/auth/login
