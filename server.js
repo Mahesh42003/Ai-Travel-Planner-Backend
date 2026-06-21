@@ -11,7 +11,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const app = express();
 
 // Allow the configured frontend origin(s); falls back to localhost dev port.
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'https://ai-travel-planner-frontend-9ftlilxrb-mahesh42003s-projects.vercel.app')
   .split(',')
   .map((o) => o.trim());   
 
