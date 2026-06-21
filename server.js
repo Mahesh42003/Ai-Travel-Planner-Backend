@@ -11,11 +11,11 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const app = express();
 
 // Allow the configured frontend origin(s); falls back to localhost dev port.
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'https://ai-travel-planner-frontend-9ftlilxrb-mahesh42003s-projects.vercel.app')
+const allowedOrigins = (process.env.CLIENT_ORIGIN )
   .split(',')
   .map((o) => o.trim());   
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (req, res) => {
